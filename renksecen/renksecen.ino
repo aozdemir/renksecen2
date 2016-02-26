@@ -1,9 +1,9 @@
- 
+
 #include <Servo.h>
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
-#define DEBUG
+//#define DEBUG
 
 #define ileri digitalWrite(yol.dir, HIGH)   
 #define geri  digitalWrite(yol.dir, LOW)
@@ -13,7 +13,7 @@
 
 #define KOL_IN    170
 #define KOL_KALK  400 
-#define KOL_DONME 200
+#define KOL_DONME 400
 
 #define PAR1_AC    200 
 #define PAR1_KAPA  320 
@@ -31,18 +31,18 @@ struct StepMotor
 };
 
 //tcs pinleri
-const int s0 = 10 ;
-const int s1 = A2;
+const int s0 = 12 ;
+const int s1 = A1;
 const int s2 = 11;
-const int s3 = 12;
-const int out = A0;
+const int s3 = A0;
+const int out = A2;
 
 //led
-const int led=A1;
+const int led=10;
 
 //button pinleri
 const int conf_yol = 5;
-const int conf_omuz = 12;
+const int conf_omuz = 13;
 const int startButton = 9;
 
 const int hiz = 200;
@@ -56,7 +56,7 @@ int blue = 0;
 char renk;
 char oku[7];
 float x;
-int pos, hedef, konum=5, gelecek=4;
+int pos, hedef, konum=5, gelecek=4, i=0 ,  t;
 
 
 enum mystate {ogren=0,topla};
@@ -118,10 +118,10 @@ void setup() {
    
     
     Serial.println("bismillahirrahmanirrahim");
-    
+    digitalWrite(led,HIGH);
     pwm.setPWM(kol, 0,KOL_KALK);  
 
-    while(digitalRead(conf_omuz)){sag_adim();} //Kendini sona kadar getirir
+    while(digitalRead(conf_omuz)){sol_adim();} //Kendini sona kadar getirir
     
     while(digitalRead(conf_yol)){geri_adim();} //Kendini sona kadar getirir
    
@@ -132,6 +132,7 @@ void setup() {
    
     Serial.println("basladim");
     ileri_cm(7);
+    durum=ogren;   
 }
 
 void loop() {
@@ -139,15 +140,52 @@ void loop() {
 
 switch(durum){
   case(ogren):
-    durum=topla;
+      
+      oku[i]=renkBul();
+      ileri_cm(31.8);
+      i++; 
+      if(i>=5){
+        oku[i]=renkBul();
+        Serial.println(oku);
+        i=0;
+        durum=topla;   
+      }   
    break;
     case(topla):
-    
-       
+      tut();
+      
+      Serial.println(renk);
+      hedef=hedefBul(); 
 
+      if(hedef==6)
+          Serial.println("hedef taninmadi");
+      Serial.print(oku);
+      Serial.print("Konum:");
+      Serial.print(konum);
+      Serial.print("Birakilacak Yer:");
+      Serial.print(hedef);
+      Serial.print("Siradaki:");
+      Serial.println(gelecek);
+      if((hedef>konum))
+        ileri_cm((hedef-konum)*31.8);
+      else
+        geri_cm((konum-hedef)*31.8);
+      birak();
+      Serial.print("biraktim");
+      konum=hedef;
+      if((gelecek>konum))
+        ileri_cm((gelecek-konum)*31.8);
+      else
+        geri_cm((konum-gelecek)*31.8);
+        konum=gelecek;
+      
+      if(gelecek==-1){
+      while(1);
+      }
+      gelecek--;
     break;
   }
-
+  delay(200);
 }
 
 void geri_cm(float cm) {
@@ -202,10 +240,10 @@ void sag_don(void) {
   }
 
 }
-void sag_adim(void) {
+void sol_adim(void) {
 
   digitalWrite(omuz.enable, LOW);
-  sag; 
+  sol; 
 
     digitalWrite(omuz.adim, HIGH); // Output high
     delayMicroseconds(omuz.hiz); 
@@ -230,6 +268,9 @@ void sol_don(void) {
 
 void tut(){
 
+  sag_don();
+
+
   //parmaklar açılır  kol asagı iner --renke bakar--  parmaklar kapanır  kol kalkar 
   pwm.setPWM(par1, 0,PAR1_AC);
   pwm.setPWM(par2, 0,PAR2_AC);
@@ -241,6 +282,8 @@ void tut(){
       delay(10);  
     }
    delay(1000);
+   color();
+
    pwm.setPWM(par1, 0,PAR1_KAPA);
    pwm.setPWM(par2, 0,PAR2_KAPA);
 
@@ -251,6 +294,7 @@ void tut(){
       delay(10);  
     }
   delay(1000);
+  sol_don();
 }
 
 void birak(){
@@ -289,14 +333,45 @@ void color()
     renk = 'Y';
   else if (red < blue && red < green && green < blue) 
     renk = 'S';
+   Serial.print(renk);
 
-  #ifdef DEBUG
-  Serial.print("RED :");
-  Serial.print(red, DEC);
-  Serial.print(" GREEN : ");
-  Serial.print(green, DEC);
-  Serial.print(" BLUE : ");
-  Serial.print(blue, DEC);
-  Serial.println();
-  #endif
+}
+
+
+char renkBul(){
+    //alt servo 90
+    //dirsekServo 50 - 0
+    //color()
+    //koldaki dirsek servoyu kibarca yere indir
+     while(digitalRead(conf_omuz)){sol_adim();}
+    pwm.setPWM(par1, 0,PAR1_AC);
+    pwm.setPWM(par2, 0,PAR2_AC);
+
+
+    //altServo.write(0);
+    for (int pos = KOL_KALK; pos >KOL_IN; pos--) {
+      pwm.setPWM(kol, 0,pos);
+      delay(10);  
+    }
+
+    delay(200);
+    color(); //rengi bul
+    
+    //koldaki dirsek servoyu kaldir
+    for (int pos = KOL_IN; pos < KOL_KALK; pos++) {
+      pwm.setPWM(kol, 0,pos);
+      delay(10);  
+    }
+    //color ile elde ettigin rengi donder
+    return renk;
+}
+
+int hedefBul(){
+  for(t=5;t>=0;t--){
+  if(renk==oku[t]) {
+    oku[t]='0';
+    return t;
+    }
+}
+  return 6;
 }
