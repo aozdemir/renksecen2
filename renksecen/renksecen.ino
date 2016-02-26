@@ -4,6 +4,7 @@
 #include <Adafruit_PWMServoDriver.h>
 
 //#define DEBUG
+//omuz alt step
 
 #define ileri digitalWrite(yol.dir, HIGH)   
 #define geri  digitalWrite(yol.dir, LOW)
@@ -15,10 +16,11 @@
 #define KOL_KALK  400 
 #define KOL_DONME 400
 
-#define PAR1_AC    200 
+
+#define PAR1_AC    250 
 #define PAR1_KAPA  320 
 
-#define PAR2_AC    550 
+#define PAR2_AC    580
 #define PAR2_KAPA  500 
 
 
@@ -67,7 +69,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 
 StepMotor omuz = {8,6,7,1200};
-StepMotor yol  = {4,2,3,200};
+StepMotor yol  = {4,2,3,150};
 
 
 
@@ -275,25 +277,25 @@ void tut(){
   pwm.setPWM(par1, 0,PAR1_AC);
   pwm.setPWM(par2, 0,PAR2_AC);
   
-  delay(100);
+ // delay(100);
   
     for (int pos = KOL_KALK; pos >KOL_IN; pos--) {
       pwm.setPWM(kol, 0,pos);
-      delay(10);  
+      delay(5);  
     }
-   delay(1000);
+   delay(500);
    color();
 
    pwm.setPWM(par1, 0,PAR1_KAPA);
    pwm.setPWM(par2, 0,PAR2_KAPA);
 
-    delay(100);
+ //   delay(100);
 
       for (int pos = KOL_IN; pos < KOL_KALK; pos++) {
       pwm.setPWM(kol, 0,pos);
-      delay(10);  
+      delay(5);  
     }
-  delay(1000);
+  delay(500);
   sol_don();
 }
 
@@ -301,16 +303,16 @@ void birak(){
   
     for (int pos = KOL_KALK; pos >KOL_IN; pos--) {
          pwm.setPWM(kol, 0,pos);
-          delay(10);  
+          delay(5);  
       }
 
       pwm.setPWM(par1, 0,PAR1_AC);
       pwm.setPWM(par2, 0,PAR2_AC);
-      delay(100);
+    //  delay(100);
 
      for (int pos = KOL_IN; pos < KOL_KALK; pos++) {
     pwm.setPWM(kol, 0,pos);
-    delay(10);  
+    delay(5);  
      }
   
   }
@@ -351,7 +353,7 @@ char renkBul(){
     //altServo.write(0);
     for (int pos = KOL_KALK; pos >KOL_IN; pos--) {
       pwm.setPWM(kol, 0,pos);
-      delay(10);  
+      delay(5);  
     }
 
     delay(200);
@@ -360,7 +362,7 @@ char renkBul(){
     //koldaki dirsek servoyu kaldir
     for (int pos = KOL_IN; pos < KOL_KALK; pos++) {
       pwm.setPWM(kol, 0,pos);
-      delay(10);  
+      delay(5);  
     }
     //color ile elde ettigin rengi donder
     return renk;
