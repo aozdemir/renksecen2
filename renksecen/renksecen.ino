@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
+#define DEBUG
 
 #define ileri digitalWrite(yol.dir, HIGH)   
 #define geri  digitalWrite(yol.dir, LOW)
@@ -29,12 +30,33 @@ struct StepMotor
   int hiz;
 };
 
+//tcs pinleri
+const int s0 = 10 ;
+const int s1 = A2;
+const int s2 = 11;
+const int s3 = 12;
+const int out = A0;
+
+//led
+const int led=A1;
+
+//button pinleri
 const int conf_yol = 5;
 const int conf_omuz = 12;
-
 const int startButton = 9;
 
 const int hiz = 200;
+
+
+int red = 0;
+int green = 0;
+int blue = 0;
+
+
+char renk;
+char oku[7];
+float x;
+int pos, hedef, konum=5, gelecek=4;
 
 
 enum mystate {ogren=0,topla};
@@ -47,7 +69,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 StepMotor omuz = {8,6,7,1200};
 StepMotor yol  = {4,2,3,200};
 
-int  hedef, konum=5, gelecek=4 ;
+
 
 const int kol = 0 ,par1 =1 ,par2 =3;
 
@@ -56,43 +78,60 @@ boolean stringComplete = false;
 
 
 void setup() {
- 
- pinMode(yol.dir,OUTPUT);
- pinMode(yol.adim,OUTPUT);
- pinMode(yol.enable,OUTPUT);
+  //sensor
+  pinMode(s0, OUTPUT);
+  pinMode(s1, OUTPUT);
+  pinMode(s2, OUTPUT);
+  pinMode(s3, OUTPUT);
+  pinMode(out, INPUT);
+  digitalWrite(s0, HIGH);
+  digitalWrite(s1, HIGH);
 
- pinMode(omuz.dir,OUTPUT);
- pinMode(omuz.adim,OUTPUT);
- pinMode(omuz.enable,OUTPUT);
 
- pinMode(conf_yol,INPUT_PULLUP);
-  pinMode(conf_omuz,INPUT_PULLUP);
- pinMode(startButton,INPUT_PULLUP);
-  
- digitalWrite(yol.enable,LOW);
- digitalWrite(omuz.enable,LOW);
-  
-  Serial.begin(9600);
-  
-  pwm.begin();
-  
-  pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
+   //step motorlar
+   pinMode(yol.dir,OUTPUT);
+   pinMode(yol.adim,OUTPUT);
+   pinMode(yol.enable,OUTPUT);
+   digitalWrite(yol.enable,LOW);
 
-  yield();
- 
-  
-  Serial.println("bismillahirrahmanirrahim");
-  
-  pwm.setPWM(kol, 0,KOL_KALK);  
-while(digitalRead(conf_omuz)){sol_adim();} //Kendini sona kadar getirir
-/*  
-while(digitalRead(conf_yol)){geri_adim();} //Kendini sona kadar getirir
- Serial.println("DUVar");
-  while(digitalRead(startButton)){} //Kendini sona kadar getirir
+   pinMode(omuz.dir,OUTPUT);
+   pinMode(omuz.adim,OUTPUT);
+   pinMode(omuz.enable,OUTPUT);
+   digitalWrite(omuz.enable,LOW);
+   
+   //buttonlar
+   pinMode(conf_yol,INPUT_PULLUP);
+   pinMode(conf_omuz,INPUT_PULLUP);
+   pinMode(startButton,INPUT_PULLUP);
 
- 
-  Serial.println("basladim");
-  ileri_cm(7);*/
+   //led
+   pinMode(led,OUTPUT);
+    
+   
+    Serial.begin(9600);
+    
+    pwm.begin();
+    
+    pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
+
+    yield();
+   
+    
+    Serial.println("bismillahirrahmanirrahim");
+    
+    pwm.setPWM(kol, 0,KOL_KALK);  
+
+    while(digitalRead(conf_omuz)){sag_adim();} //Kendini sona kadar getirir
+    
+    while(digitalRead(conf_yol)){geri_adim();} //Kendini sona kadar getirir
+   
+    Serial.println("DUVar");
+    
+    while(digitalRead(startButton)){} //Kendini sona kadar getirir
+
+   
+    Serial.println("basladim");
+    ileri_cm(7);
 }
 
 void loop() {
@@ -103,43 +142,7 @@ switch(durum){
     durum=topla;
    break;
     case(topla):
-    // sol_don();
- //   pwm.setPWM(kol, 0,KOL_IN
-  //  );  
-     
-    /* delay(5000);
-       tut();
-       delay(1000);
-       
-        ileri_cm(31.8);
-         sol_don();
-        
-        
-        //sag_don();
-     /*   sol_don();
-        
-        sag_don();
-        delay(5000);
-     /*    sag_don();
-       delay(2000);
-       
-  
-   /*  pwm.setPWM(kol, 0,KOL_KALK);
-       pwm.setPWM(par1, 0,PAR1_KAPA);
-        pwm.setPWM(par2, 0,PAR2_KAPA);
-
-       
- /*   for (int pos = KOL_KALK; pos >KOL_IN; pos--) {
-      pwm.setPWM(kol, 0,pos);
-      delay(10);  
-    }
-      pwm.setPWM(kol, 0,KOL_IN);
-       pwm.setPWM(par1, 0,PAR1_KAPA);
-         pwm.setPWM(par2, 0,PAR2_KAPA);
-
-     /*  Serial.println("aldım");
-       ileri_cm(10);*/
-
+    
        
 
     break;
@@ -225,22 +228,12 @@ void sol_don(void) {
   }
 }
 
-void sol_adim(void) {
-
-  digitalWrite(omuz.enable, LOW);
-  sol; 
-
-    digitalWrite(omuz.adim, HIGH); // Output high
-    delayMicroseconds(omuz.hiz); 
-    digitalWrite(omuz.adim, LOW); // Output low
-    delayMicroseconds(omuz.hiz);
-  
-}
 void tut(){
 
   //parmaklar açılır  kol asagı iner --renke bakar--  parmaklar kapanır  kol kalkar 
   pwm.setPWM(par1, 0,PAR1_AC);
   pwm.setPWM(par2, 0,PAR2_AC);
+  
   delay(100);
   
     for (int pos = KOL_KALK; pos >KOL_IN; pos--) {
@@ -259,6 +252,7 @@ void tut(){
     }
   delay(1000);
 }
+
 void birak(){
   
     for (int pos = KOL_KALK; pos >KOL_IN; pos--) {
@@ -277,3 +271,32 @@ void birak(){
   
   }
 
+void color()
+{
+  digitalWrite(s2, LOW);
+  digitalWrite(s3, LOW);
+  red = pulseIn(out, digitalRead(out) == HIGH ? LOW : HIGH);
+  digitalWrite(s3, HIGH);
+  blue = pulseIn(out, digitalRead(out) == HIGH ? LOW : HIGH);
+  digitalWrite(s2, HIGH);
+  green = pulseIn(out, digitalRead(out) == HIGH ? LOW : HIGH);
+
+  if (red < blue && red < green && green > blue)
+    renk = 'K';
+  else if (blue < red && blue < green)
+    renk = 'M';
+  else if (green < red && green < blue)
+    renk = 'Y';
+  else if (red < blue && red < green && green < blue) 
+    renk = 'S';
+
+  #ifdef DEBUG
+  Serial.print("RED :");
+  Serial.print(red, DEC);
+  Serial.print(" GREEN : ");
+  Serial.print(green, DEC);
+  Serial.print(" BLUE : ");
+  Serial.print(blue, DEC);
+  Serial.println();
+  #endif
+}
