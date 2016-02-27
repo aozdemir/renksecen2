@@ -4,7 +4,6 @@
 #include <Adafruit_PWMServoDriver.h>
 
 //#define DEBUG
-//omuz alt step
 
 #define ileri digitalWrite(yol.dir, HIGH)   
 #define geri  digitalWrite(yol.dir, LOW)
@@ -16,11 +15,10 @@
 #define KOL_KALK  400 
 #define KOL_DONME 400
 
-
 #define PAR1_AC    220 
 #define PAR1_KAPA  320 
 
-#define PAR2_AC    500
+#define PAR2_AC    520 
 #define PAR2_KAPA  400 
 
 
@@ -40,11 +38,13 @@ const int s3 = A0;
 const int out = A2;
 
 //led
-const int led=10;
+//const int led=10;
 
 //button pinleri
+
 const int conf_yol = 5;
 const int conf_omuz = 13;
+const int conf_son =10 ;
 const int startButton = 9;
 
 const int hiz = 200;
@@ -68,7 +68,7 @@ mystate durum=ogren;
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 
-StepMotor omuz = {8,6,7,1800};
+StepMotor omuz = {8,6,7,1200};
 StepMotor yol  = {4,2,3,150};
 
 
@@ -105,9 +105,10 @@ void setup() {
    pinMode(conf_yol,INPUT_PULLUP);
    pinMode(conf_omuz,INPUT_PULLUP);
    pinMode(startButton,INPUT_PULLUP);
+   pinMode(conf_son,INPUT_PULLUP);
 
    //led
-   pinMode(led,OUTPUT);
+  // pinMode(led,OUTPUT);
     
    
     Serial.begin(9600);
@@ -120,11 +121,12 @@ void setup() {
    
     
     Serial.println("bismillahirrahmanirrahim");
-    digitalWrite(led,HIGH);
+   // digitalWrite(led,HIGH);
     pwm.setPWM(kol, 0,KOL_KALK);  
 
     while(digitalRead(conf_omuz)){sol_adim();} //Kendini sona kadar getirir
-    
+// while(digitalRead(conf_son)){sag_adim();} 
+    Serial.println("bastın");
     while(digitalRead(conf_yol)){geri_adim();} //Kendini sona kadar getirir
    
     Serial.println("DUVar");
@@ -229,7 +231,7 @@ void geri_adim(void) {
 
 }
 
-void sag_don(void) {
+/*void sag_don(void) {
 
   digitalWrite(omuz.enable, LOW);
   sag; 
@@ -240,6 +242,18 @@ void sag_don(void) {
     digitalWrite(omuz.adim, LOW); // Output low
     delayMicroseconds(omuz.hiz); 
   }
+
+}*/
+void sag_adim(void) {
+
+  digitalWrite(omuz.enable, LOW);
+  sag; 
+
+    digitalWrite(omuz.adim, HIGH); // Output high
+    delayMicroseconds(omuz.hiz); 
+    digitalWrite(omuz.adim, LOW); // Output low
+    delayMicroseconds(omuz.hiz); 
+  
 
 }
 void sol_adim(void) {
@@ -255,7 +269,7 @@ void sol_adim(void) {
 
 }
 
-void sol_don(void) {
+/*void sol_don(void) {
 
   digitalWrite(omuz.enable, LOW);
   sol; 
@@ -267,17 +281,16 @@ void sol_don(void) {
     delayMicroseconds(omuz.hiz);
   }
 }
-
+*/
 void tut(){
 
-  sag_don();
-
+  while(digitalRead(conf_son)){sag_adim();} 
 
   //parmaklar açılır  kol asagı iner --renke bakar--  parmaklar kapanır  kol kalkar 
   pwm.setPWM(par1, 0,PAR1_AC);
   pwm.setPWM(par2, 0,PAR2_AC);
   
- // delay(100);
+  delay(100);
   
     for (int pos = KOL_KALK; pos >KOL_IN; pos--) {
       pwm.setPWM(kol, 0,pos);
@@ -289,14 +302,15 @@ void tut(){
    pwm.setPWM(par1, 0,PAR1_KAPA);
    pwm.setPWM(par2, 0,PAR2_KAPA);
 
- //   delay(100);
+    delay(100);
 
       for (int pos = KOL_IN; pos < KOL_KALK; pos++) {
       pwm.setPWM(kol, 0,pos);
       delay(5);  
     }
   delay(500);
-  sol_don();
+  
+  while(digitalRead(conf_omuz)){sol_adim();} //Kendini sona kadar getirir
 }
 
 void birak(){
@@ -308,7 +322,7 @@ void birak(){
 
       pwm.setPWM(par1, 0,PAR1_AC);
       pwm.setPWM(par2, 0,PAR2_AC);
-    //  delay(100);
+      delay(100);
 
      for (int pos = KOL_IN; pos < KOL_KALK; pos++) {
     pwm.setPWM(kol, 0,pos);
