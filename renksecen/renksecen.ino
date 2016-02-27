@@ -17,11 +17,11 @@
 #define KOL_DONME 400
 
 
-#define PAR1_AC    250 
+#define PAR1_AC    220 
 #define PAR1_KAPA  320 
 
-#define PAR2_AC    580
-#define PAR2_KAPA  500 
+#define PAR2_AC    500
+#define PAR2_KAPA  400 
 
 
 struct StepMotor
@@ -68,7 +68,7 @@ mystate durum=ogren;
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 
-StepMotor omuz = {8,6,7,1200};
+StepMotor omuz = {8,6,7,1800};
 StepMotor yol  = {4,2,3,150};
 
 
